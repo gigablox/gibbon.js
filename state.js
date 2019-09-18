@@ -9,6 +9,7 @@ class $State {
     this.bindStateLoadingEvent()
     this.bindStateLoadedEvent()
     this.startQue()
+    this.routeInit()
   }
 
   routeRewrite(route, newRoute) {
@@ -26,9 +27,6 @@ class $State {
   }
 
   routeUpdate(route) {
-    if (window.isCordova) {
-      return
-    }
     if (this.firstLoad) {
       window.history.replaceState(null, null, route)
       this.firstLoad = false
@@ -38,11 +36,8 @@ class $State {
   }
 
   routeInit() {
-    if (window.isCordova) {
-      return
-    }
     setTimeout(() => {
-      window.onpopstate = function (e) {
+      window.onpopstate = (e) => {
         this.routeInterceptor(true)
       }
     }, 100)

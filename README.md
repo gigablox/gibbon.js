@@ -10,12 +10,12 @@ You value flexibility and portability and want to avoid running into walls that 
 
 You think the inter-module communication and data layer mediation depends on the shape of the application. You would rather roll your own.
 
-## Sites that use state.js
+## Sites that use it
 
 [![https://eloot.gg](https://i.imgur.com/xdHTW2f.png)](https://eloot.gg)
 
 
-## Key Concepts API
+## Key Concepts
 A state describes a group of components that are constructed during your state instantiation.
 
 A `target` is passed into the constructor of each component.

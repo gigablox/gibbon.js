@@ -10,6 +10,8 @@ You value flexibility and portability and want to avoid running into walls that 
 
 You think the inter-module communication and data layer mediation depends on the shape of the application. You would rather roll your own.
 
+[Codepen Playground](https://codepen.io/gigablox/pen/ExYdjYd)
+
 ## Sites that use it
 
 [![https://eloot.gg](https://i.imgur.com/xdHTW2f.png)](https://eloot.gg)

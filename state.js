@@ -1,358 +1,364 @@
 class $State {
-	
-	constructor(){
-		this.ques = {}
-		this.states = {}
-		this.routeMap = {}
-		this.routeWrites = {}
-    this.firstLoad = true
-		this.bindStateLoadingEvent()
-		this.bindStateLoadedEvent()
-		this.startQue()
-	}
 
-	routeRewrite(route, newRoute){
+  constructor() {
+    this.ques = {}
+    this.states = {}
+    this.routeMap = {}
+    this.routeWrites = {}
+    this.firstLoad = true
+    this.bindStateLoadingEvent()
+    this.bindStateLoadedEvent()
+    this.startQue()
+  }
+
+  routeRewrite(route, newRoute) {
     this.routeWrites[route] = newRoute
   }
 
-  routeInterceptor (popState){
+  routeInterceptor(popState) {
     var route = location.pathname
     var state = this.routeWrites[route] || this.routeMap[route] || null
-    if(state && this.states[state]){
-      this.go(state, {nonClickEvent: popState})
+    if (state && this.states[state]) {
+      this.go(state, {
+        nonClickEvent: popState
+      })
     }
   }
 
-  routeUpdate (route){
-    if(window.isCordova){
+  routeUpdate(route) {
+    if (window.isCordova) {
       return
     }
-    if(this.firstLoad){
+    if (this.firstLoad) {
       window.history.replaceState(null, null, route)
       this.firstLoad = false
     }
-    else{
+    else {
       window.history.pushState(null, null, route)
     }
   }
 
-  routeInit (){
-    if(window.isCordova){
+  routeInit() {
+    if (window.isCordova) {
       return
     }
     setTimeout(() => {
       window.onpopstate = function(e) {
         this.routeInterceptor(true)
       }
-    },100)
+    }, 100)
   }
 
-	define(state, config){
+  define(state, config) {
 
-		config = config || {}
+    config = config || {}
 
-		var stateParts = state.split(".")
-		var isChild = stateParts.length > 1
-		var parent = isChild ? stateParts.slice(0, (stateParts.length - 1)).join(".") : null
-		var base = isChild ? stateParts[0] : state
+    var stateParts = state.split(".")
+    var isChild = stateParts.length > 1
+    var parent = isChild ? stateParts.slice(0, (stateParts.length - 1)).join(".") : null
+    var base = isChild ? stateParts[0] : state
 
-		this.ques[base] = this.ques[base] || []
+    this.ques[base] = this.ques[base] || []
 
-		this.states[state] = {
-			name: state,
-			isChild: isChild,
-			base: base,
-			parent: parent,
-			children: {},
-			route: config.route || null,
-			resolves: config.resolves || [],
-			components: config.components || [],
-			template: config.template || null,
-			target: config.target || null,
-			constructed: {}
-		}
+    this.states[state] = {
+      name: state,
+      isChild: isChild,
+      base: base,
+      parent: parent,
+      children: {},
+      route: config.route || null,
+      resolves: config.resolves || [],
+      components: config.components || [],
+      template: config.template || null,
+      target: config.target || null,
+      constructed: {}
+    }
 
-		if(isChild){
-			this.states[parent].children[state] = true
-		}
+    if (isChild) {
+      this.states[parent].children[state] = true
+    }
 
-		if(config.route){
-			this.routeMap[config.route] = state
-		}
-	}
-	
-	startQue(){
-		setInterval(() => {
-			for(var i in this.ques){
-				var que = this.ques[i]
-				if(que[0] && !this.isLoading(que[0])){
-					this.build(que[0])
-				}
-			}
-		}, 100)
-	}
+    if (config.route) {
+      this.routeMap[config.route] = state
+    }
+  }
 
-	go(targetState, config){
+  startQue() {
+    setInterval(() => {
+      for (var i in this.ques) {
+        var que = this.ques[i]
+        if (que[0] && !this.isLoading(que[0])) {
+          this.build(que[0])
+        }
+      }
+    }, 100)
+  }
 
-		var config = config || {}
-		var targetStateParts = targetState.split('.')
-		var baseState = targetStateParts[0]
+  go(targetState, config) {
 
-		this.dispatchEvent('stateGo', this.states[targetState])
-		
-		if(this.states[targetState].active){
-			return
-		}
+    var config = config || {}
+    var targetStateParts = targetState.split('.')
+    var baseState = targetStateParts[0]
 
-		var routerUpdate = () => {
-			if(this.states[targetState].route && !config.nonClickEvent){
-				this.routeUpdate(this.states[targetState].route)
-			}
-		}
+    this.dispatchEvent('stateGo', this.states[targetState])
 
-		var destroyStates = () => {
-			var childrenToDestroy = []
-			var activeChildren = this.activeChildren(baseState)
-			activeChildren.forEach((d) => {
-				if(!targetState.includes(d)){
-					childrenToDestroy.unshift(d)
-				}
-			})
-			for(var i = 0; i < childrenToDestroy.length; i++){
-				this.destroy(childrenToDestroy[i])
-			}
-		}
+    if (this.states[targetState].active) {
+      return
+    }
 
-		var cleanStates = () => {
+    var routerUpdate = () => {
+      if (this.states[targetState].route && !config.nonClickEvent) {
+        this.routeUpdate(this.states[targetState].route)
+      }
+    }
 
-			var statesWithEqualLength = []
-			var statesWithLesserLength = []
-			var statesWithGreaterLength = []
-			var queParts = this.ques[baseState].map((d) => { return d.split('.').length })
+    var destroyStates = () => {
+      var childrenToDestroy = []
+      var activeChildren = this.activeChildren(baseState)
+      activeChildren.forEach((d) => {
+        if (!targetState.includes(d)) {
+          childrenToDestroy.unshift(d)
+        }
+      })
+      for (var i = 0; i < childrenToDestroy.length; i++) {
+        this.destroy(childrenToDestroy[i])
+      }
+    }
 
-			queParts.forEach((length, i) => {
-				if(length < targetStateParts.length){
-					statesWithLesserLength.push(this.ques[baseState][i])
-				}
-				if(length > targetStateParts.length){
-					statesWithGreaterLength.push(this.ques[baseState][i])
-				}
-				if(length == targetStateParts.length){
-					statesWithEqualLength.push(this.ques[baseState][i])
-				}
-			})
+    var cleanStates = () => {
 
-			statesWithLesserLength.forEach((state) => {
-				var i = this.ques[baseState].indexOf(state)
-				if(i === 0 && !targetState.includes(state)){
-					this.states[this.ques[baseState][i]].clean = true
-				}
-				else{
-					this.ques[baseState].splice(i,1)
-				}
-			})
+      var statesWithEqualLength = []
+      var statesWithLesserLength = []
+      var statesWithGreaterLength = []
+      var queParts = this.ques[baseState].map((d) => {
+        return d.split('.').length
+      })
 
-			statesWithGreaterLength.forEach((state) => {
-				var i = this.ques[baseState].indexOf(state)
-				if(i === 0){
-					this.states[this.ques[baseState][i]].clean = true
-				}
-				else{
-					this.ques[baseState].splice(i,1)
-				}
-			})
+      queParts.forEach((length, i) => {
+        if (length < targetStateParts.length) {
+          statesWithLesserLength.push(this.ques[baseState][i])
+        }
+        if (length > targetStateParts.length) {
+          statesWithGreaterLength.push(this.ques[baseState][i])
+        }
+        if (length == targetStateParts.length) {
+          statesWithEqualLength.push(this.ques[baseState][i])
+        }
+      })
 
-			statesWithEqualLength.forEach((state) => {
-				var i = this.ques[baseState].indexOf(state)
-				if(i === 0){
-					this.states[this.ques[baseState][i]].clean = (targetState !== state) ? true : false
-				}
-				else{
-					this.ques[baseState].splice(i,1)
-				}
-			})
-		}
-		
-		var pushStates = () => {
-			var stateTree = this.stateTree(targetState)
-			stateTree.forEach((treeState) => {
-				var queHasTreeState = this.ques[baseState].includes(treeState)
-				var treeStateLoading = this.states[treeState].loading
-				var treeStateActive = this.states[treeState].active
-				if(!queHasTreeState && !treeStateLoading && !treeStateActive){
-					this.ques[baseState].push(treeState)
-				}
-			})
-		}
+      statesWithLesserLength.forEach((state) => {
+        var i = this.ques[baseState].indexOf(state)
+        if (i === 0 && !targetState.includes(state)) {
+          this.states[this.ques[baseState][i]].clean = true
+        }
+        else {
+          this.ques[baseState].splice(i, 1)
+        }
+      })
 
-		routerUpdate()
-		destroyStates()
-		cleanStates()
-		pushStates()
-	}
+      statesWithGreaterLength.forEach((state) => {
+        var i = this.ques[baseState].indexOf(state)
+        if (i === 0) {
+          this.states[this.ques[baseState][i]].clean = true
+        }
+        else {
+          this.ques[baseState].splice(i, 1)
+        }
+      })
 
-	build (state){
+      statesWithEqualLength.forEach((state) => {
+        var i = this.ques[baseState].indexOf(state)
+        if (i === 0) {
+          this.states[this.ques[baseState][i]].clean = (targetState !== state) ? true : false
+        }
+        else {
+          this.ques[baseState].splice(i, 1)
+        }
+      })
+    }
 
-		var resolvePromises = []
-		var id = state
+    var pushStates = () => {
+      var stateTree = this.stateTree(targetState)
+      stateTree.forEach((treeState) => {
+        var queHasTreeState = this.ques[baseState].includes(treeState)
+        var treeStateLoading = this.states[treeState].loading
+        var treeStateActive = this.states[treeState].active
+        if (!queHasTreeState && !treeStateLoading && !treeStateActive) {
+          this.ques[baseState].push(treeState)
+        }
+      })
+    }
 
-		this.dispatchEvent('stateLoading', this.states[id])
+    routerUpdate()
+    destroyStates()
+    cleanStates()
+    pushStates()
+  }
 
-		this.buildTemplate(id)
+  build(state) {
 
-		this.states[id].resolves.forEach((_resolve) => {
-			resolvePromises.push(_resolve())
-		})
+    var resolvePromises = []
+    var id = state
 
-		return Promise.all(resolvePromises).then(() => {
+    this.dispatchEvent('stateLoading', this.states[id])
 
-			this.states[id].components.forEach((component) => {
-				this.loadComponent(component, id)
-			})
+    this.buildTemplate(id)
 
-			this.dispatchEvent('stateLoaded', this.states[id])
-		})
-	}
+    this.states[id].resolves.forEach((_resolve) => {
+      resolvePromises.push(_resolve())
+    })
 
-	destroy(state){
-		this.destroyComponents(state)
-		this.destroyTemplate(state)
-		this.states[state].active = false
-		this.states[state].clean = false
-	}
+    return Promise.all(resolvePromises).then(() => {
 
-	loadComponent(constructor, id){
-		var component = new constructor(document.querySelector(this.states[id].target))
-		var name = component.constructor.name
-		this.states[id].constructed[name] = component
-	}
+      this.states[id].components.forEach((component) => {
+        this.loadComponent(component, id)
+      })
 
-	destroyComponents(id){
-		for(var i in this.states[id].constructed){
-			var component = this.states[id].constructed[i]
-			if(component.onDestroy){
-				component.onDestroy()	
-			}
-			if(component.handle){
-				component.handle.remove()	
-			}
-			delete this.states[id].constructed[i]
-		}
-	}
+      this.dispatchEvent('stateLoaded', this.states[id])
+    })
+  }
 
-	buildTemplate(id){
-		var target = document.querySelector(this.states[id].target)
-		if(this.states[id].template){
-			target.insertAdjacentHTML('beforeend', this.states[id].template)
-			this.states[id].handle = target.lastElementChild
-		}
-	}
+  destroy(state) {
+    this.destroyComponents(state)
+    this.destroyTemplate(state)
+    this.states[state].active = false
+    this.states[state].clean = false
+  }
 
-	destroyTemplate(id){
-		if(this.states[id].handle){
-			this.states[id].handle.remove()
-		}
-	}
+  loadComponent(constructor, id) {
+    var component = new constructor(document.querySelector(this.states[id].target))
+    var name = component.constructor.name
+    this.states[id].constructed[name] = component
+  }
 
-	destroyAll(baseState){
-		var activeChildren = (this.activeChildren(baseState)).reverse()
-		for(var i = 0; i < activeChildren.length; i++){
-			this.destroy(activeChildren[i])
-		}
-	}
+  destroyComponents(id) {
+    for (var i in this.states[id].constructed) {
+      var component = this.states[id].constructed[i]
+      if (component.onDestroy) {
+        component.onDestroy()
+      }
+      if (component.handle) {
+        component.handle.remove()
+      }
+      delete this.states[id].constructed[i]
+    }
+  }
 
-	isLoading(state){
-		return this.states[state].loading
-	}
+  buildTemplate(id) {
+    var target = document.querySelector(this.states[id].target)
+    if (this.states[id].template) {
+      target.insertAdjacentHTML('beforeend', this.states[id].template)
+      this.states[id].handle = target.lastElementChild
+    }
+  }
 
-	isActive (state){
-		return this.states[state].active
-	}
+  destroyTemplate(id) {
+    if (this.states[id].handle) {
+      this.states[id].handle.remove()
+    }
+  }
 
-	dispatchEvent (event, state){
-	  document.dispatchEvent(new CustomEvent(event, { detail: state }))
-	}
+  destroyAll(baseState) {
+    var activeChildren = (this.activeChildren(baseState)).reverse()
+    for (var i = 0; i < activeChildren.length; i++) {
+      this.destroy(activeChildren[i])
+    }
+  }
 
-	stateTree (targetState, arr){
-		
-		arr = arr || []
-		var parts = targetState.split(".")
+  isLoading(state) {
+    return this.states[state].loading
+  }
 
-		if(this.states[targetState]){
-			arr.unshift(targetState)
-			parts.pop()
-			return this.stateTree(parts.join("."), arr)
-		}
-		else{
-			return arr
-		}
-	}
+  isActive(state) {
+    return this.states[state].active
+  }
 
-	activeChildren(targetState, arr){
-		
-		arr = arr || []
+  dispatchEvent(event, state) {
+    document.dispatchEvent(new CustomEvent(event, {
+      detail: state
+    }))
+  }
 
-		if(this.states[targetState] && this.isActive(targetState)){
+  stateTree(targetState, arr) {
 
-			arr.push(targetState)
-			var firstActiveChild
-			var children = Object.keys(this.states[targetState].children)
+    arr = arr || []
+    var parts = targetState.split(".")
 
-			children.forEach((d) => {
-				if(this.isActive(d)){
-					firstActiveChild = this.states[d].name
-					return
-				}
-			})
+    if (this.states[targetState]) {
+      arr.unshift(targetState)
+      parts.pop()
+      return this.stateTree(parts.join("."), arr)
+    }
+    else {
+      return arr
+    }
+  }
 
-			if(firstActiveChild){
-				return this.activeChildren(firstActiveChild, arr)
-			}
-			else{
-				return arr
-			}
-		}
-		else{
-			return arr
-		}
-	}
+  activeChildren(targetState, arr) {
 
-	loadingChildren(targetState, arr){
+    arr = arr || []
 
-		arr = arr || []
-		var children = Object.keys(this.states[targetState].children)
+    if (this.states[targetState] && this.isActive(targetState)) {
 
-		if(this.isLoading(targetState)){
-			arr.push(targetState)
-		}
+      arr.push(targetState)
+      var firstActiveChild
+      var children = Object.keys(this.states[targetState].children)
 
-		if(this.states[targetState] && children.length){
-			children.forEach((d) => {
-				this.loadingChildren(d, arr)
-			})
-		}
+      children.forEach((d) => {
+        if (this.isActive(d)) {
+          firstActiveChild = this.states[d].name
+          return
+        }
+      })
 
-		return arr
-	}
+      if (firstActiveChild) {
+        return this.activeChildren(firstActiveChild, arr)
+      }
+      else {
+        return arr
+      }
+    }
+    else {
+      return arr
+    }
+  }
 
-	bindStateLoadingEvent(){
-		document.addEventListener("stateLoading", (event) => {
-			var state = event.detail
-			this.states[state.name].loading = true
-		})
-	}
+  loadingChildren(targetState, arr) {
 
-	bindStateLoadedEvent(){
-		document.addEventListener("stateLoaded", (event) => {
+    arr = arr || []
+    var children = Object.keys(this.states[targetState].children)
 
-			var state = event.detail
-			this.states[state.name].loading = false
-			this.states[state.name].active = true
-			this.ques[state.base].shift()
+    if (this.isLoading(targetState)) {
+      arr.push(targetState)
+    }
 
-			if(this.states[state.name].clean){
-				this.destroy(state.name)
-			}
-		})
-	}
+    if (this.states[targetState] && children.length) {
+      children.forEach((d) => {
+        this.loadingChildren(d, arr)
+      })
+    }
+
+    return arr
+  }
+
+  bindStateLoadingEvent() {
+    document.addEventListener("stateLoading", (event) => {
+      var state = event.detail
+      this.states[state.name].loading = true
+    })
+  }
+
+  bindStateLoadedEvent() {
+    document.addEventListener("stateLoaded", (event) => {
+
+      var state = event.detail
+      this.states[state.name].loading = false
+      this.states[state.name].active = true
+      this.ques[state.base].shift()
+
+      if (this.states[state.name].clean) {
+        this.destroy(state.name)
+      }
+    })
+  }
 }

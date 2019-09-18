@@ -94,7 +94,7 @@ Emits the `<State>` object being resolved during transition.
 Emits the `<State>` object that has fully resolved.
 
 
-## `<State>` object
+### `<State>` object
   
 ```
 {

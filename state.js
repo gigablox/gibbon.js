@@ -32,8 +32,7 @@ class $State {
     if (this.firstLoad) {
       window.history.replaceState(null, null, route)
       this.firstLoad = false
-    }
-    else {
+    } else {
       window.history.pushState(null, null, route)
     }
   }
@@ -43,7 +42,7 @@ class $State {
       return
     }
     setTimeout(() => {
-      window.onpopstate = function(e) {
+      window.onpopstate = function (e) {
         this.routeInterceptor(true)
       }
     }, 100)
@@ -150,8 +149,7 @@ class $State {
         var i = this.ques[baseState].indexOf(state)
         if (i === 0 && !targetState.includes(state)) {
           this.states[this.ques[baseState][i]].clean = true
-        }
-        else {
+        } else {
           this.ques[baseState].splice(i, 1)
         }
       })
@@ -160,8 +158,7 @@ class $State {
         var i = this.ques[baseState].indexOf(state)
         if (i === 0) {
           this.states[this.ques[baseState][i]].clean = true
-        }
-        else {
+        } else {
           this.ques[baseState].splice(i, 1)
         }
       })
@@ -170,8 +167,7 @@ class $State {
         var i = this.ques[baseState].indexOf(state)
         if (i === 0) {
           this.states[this.ques[baseState][i]].clean = (targetState !== state) ? true : false
-        }
-        else {
+        } else {
           this.ques[baseState].splice(i, 1)
         }
       })
@@ -288,8 +284,7 @@ class $State {
       arr.unshift(targetState)
       parts.pop()
       return this.stateTree(parts.join("."), arr)
-    }
-    else {
+    } else {
       return arr
     }
   }
@@ -313,12 +308,10 @@ class $State {
 
       if (firstActiveChild) {
         return this.activeChildren(firstActiveChild, arr)
-      }
-      else {
+      } else {
         return arr
       }
-    }
-    else {
+    } else {
       return arr
     }
   }

@@ -12,13 +12,27 @@ class $State {
     this.routeInit()
   }
 
-  routeRewrite(route, newRoute) {
-    this.routeWrites[route] = newRoute
+  getStateForRoute(route) {
+    var state = null
+    var newRouteParts = route.split("/")
+    for (var stateRoute in this.routeMap) {
+      var stateRouteParts = stateRoute.split("/")
+      var matchCount = 0
+      var stateRoutePartsCount = stateRouteParts.length
+      for (var i = 0; i < stateRoutePartsCount; i++) {
+        var stateRoutePart = stateRouteParts[i].includes(":") ? newRouteParts[i] : stateRouteParts[i]
+        matchCount = stateRoutePart === newRouteParts[i] ? matchCount + 1 : matchCount
+      }
+      if (matchCount === stateRoutePartsCount) {
+        state = this.routeMap[stateRoute]
+      }
+    }
+    return state
   }
 
   routeInterceptor(popState) {
     var route = location.pathname
-    var state = this.routeWrites[route] || this.routeMap[route] || null
+    var state = this.getStateForRoute(route)
     if (state && this.states[state]) {
       this.go(state, {
         nonClickEvent: popState
@@ -33,6 +47,7 @@ class $State {
     } else {
       window.history.pushState(null, null, route)
     }
+    $google.pageView(route)
   }
 
   routeInit() {
@@ -88,9 +103,21 @@ class $State {
     }, 100)
   }
 
-  go(targetState, config) {
+  mapRouteParams(route, params) {
+    if (route.includes(":") && !this.firstLoad) {
+      for (var param in params) {
+        route = route.replace(`:${param}`, params[param])
+      }
+    }
+    if (route.includes(":") && this.firstLoad) {
+      route = location.pathname
+    }
+    return route
+  }
 
-    var config = config || {}
+  go(targetState, params) {
+
+    var params = params || {}
     var targetStateParts = targetState.split('.')
     var baseState = targetStateParts[0]
 
@@ -101,19 +128,28 @@ class $State {
     }
 
     var routerUpdate = () => {
-      if (this.states[targetState].route && !config.nonClickEvent) {
-        this.routeUpdate(this.states[targetState].route)
+      if (this.states[targetState].route && !params.nonClickEvent) {
+        var route = this.mapRouteParams(this.states[targetState].route, params)
+        this.routeUpdate(route)
       }
     }
 
     var destroyStates = () => {
       var childrenToDestroy = []
       var activeChildren = this.activeChildren(baseState)
-      activeChildren.forEach((d) => {
-        if (!targetState.includes(d)) {
-          childrenToDestroy.unshift(d)
+      var targetStateParts = targetState.split(".")
+
+      activeChildren.forEach((activeChild) => {
+        var activeChildParts = activeChild.split(".")
+        var matchCount = 0
+        for (var i in activeChildParts) {
+          matchCount = activeChildParts[i] === targetStateParts[i] ? matchCount + 1 : matchCount
+        }
+        if (activeChildParts.length !== matchCount) {
+          childrenToDestroy.unshift(activeChild)
         }
       })
+
       for (var i = 0; i < childrenToDestroy.length; i++) {
         this.destroy(childrenToDestroy[i])
       }

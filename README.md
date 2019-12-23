@@ -127,3 +127,12 @@ $state.define('app2', {
   template: `<div id="app2"></div>`
 })
 ```
+
+## Route Parameters
+```
+$state.define('app.product', {
+  target: 'body',
+  route: '/product/:id',
+  components: [ Product ]
+})
+```

@@ -3,7 +3,7 @@
 Fast, minimal, native JavaScript framework.
 
 
-## Why
+## Introduction
 You prefer writing native JavaScript over framework code but still want just enough help with complex state management. 
 
 You value flexibility and portability and want to avoid running into walls that come with opinionated framework abstractions later on in the development lifecycle. 
@@ -11,10 +11,6 @@ You value flexibility and portability and want to avoid running into walls that 
 You think the inter-module communication and data layer mediation depends on the shape of the application. You would rather roll your own.
 
 [Codepen Playground](https://codepen.io/gigablox/pen/ExYdjYd)
-
-## Sites that use it
-
-[![https://eloot.gg](https://i.imgur.com/xdHTW2f.png)](https://eloot.gg)
 
 
 ## Key Concepts
@@ -136,3 +132,10 @@ $state.define('app.product', {
   components: [ Product ]
 })
 ```
+
+
+## License
+
+[MIT](https://opensource.org/licenses/MIT)
+
+Copyright (c) 2019-present, Daniel Kanze

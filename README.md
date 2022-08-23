@@ -1,137 +1,173 @@
 
-# state.js
-Fast, minimal, native JavaScript framework.
-
+# gibbon.js
+Flexible JavaScript framework.
 
 ## Introduction
-You prefer writing native JavaScript over framework code but still want just enough help with complex state management. 
+State management is the only functionality shared by every application framework.
 
-You value flexibility and portability and want to avoid running into walls that come with opinionated framework abstractions later on in the development lifecycle. 
+State management instantiates and destroys a collection of components. Nothing else. Many frameworks go further than this to enforce patterns for how you manage data, write components, declare your routing etc.
 
-You think the inter-module communication and data layer mediation depends on the shape of the application. You would rather roll your own.
-
-[Codepen Playground](https://codepen.io/gigablox/pen/ExYdjYd)
-
-
-## Key Concepts
-A state describes a group of components that are constructed during your state instantiation.
-
-A `target` is passed into the constructor of each component.
-
-### target
-A query selector. `document.querySelector(target)`
-
-### template `<String>` (optional)
-A HTML fragment appended to your `target`.  
-Useful when child states or modules of your state need a unique layout.
-
-### route `<String>` (optional)
-A push state route bound to your state. `history.pushState(route)`
-
-### resolves `<Array>` (optional)
-An `Array` of `Function` that return a `Promise`. Useful when many modules depend on the same data.
-
-### components `<Array>` (optional)
-An `Array` of `Class` that are constructed during your state instantiation.  
-A `target` is passed into the constructor of each module.
-
+Gibbon only provides a framework for state management.
 
 ## Quick Start
-```
-var $state = new $State()
+```js
+var gibbon = new Gibbon()
 
-$state.define('app', {
-  target: 'body',
-  template: `
-    <div id="app">
-      <div class="content"></div>
-    </div>
-  `,
-  components: [ Header ]
-})
-
-$state.define('app.home', {
-  target: '#app > .content',
-  route: '/home',
-  components: [ Chat ]
-})
-
-$state.go('app.home')
-```
-
-
-## Components
-```
 class Header{
-  constructor(target){
-    this.handle = document.createElement('div')
-    this.handle.id = 'header'
-    target.appendChild(this.handle)
+  constructor(){
+    this.handle = document.createElement(`div`)
+    this.handle.id = `header`
+    document.body.appendChild(this.handle)
   }
 }
 
-class Chat{
-  constructor(target){
-    this.handle = document.createElement('div')
-    this.handle.id = 'chat'
-    target.appendChild(this.handle)
-  }
-  onDestroy(){
-    //Optional - called during state transition.
+class About{
+  constructor(){
+    this.handle = document.createElement(`div`)
+    this.handle.id = `about`
+    this.handle.innerHTML = `<h1>Swing like noboby is watching.</h1>`
+    document.body.appendChild(this.handle)
   }
 }
+
+gibbon.define('app', [ Header ])
+gibbon.define('app.home', [ About ])
+
+gibbon.go('app.home')
+```
+
+## API
+
+### gibbon.define(name, components)
+Defines a new state that can be instantiated.
+
+#### Arguments
+
+##### name `<String>`
+The `name` argument is used to define a state. Compose child states using `.` as a separator.
+
+##### components `<Array>`
+The `components` argument is used to configure a state with an array of [Component](https://github.com/gigablox/gibbon.js/edit/master/README.md#component). 
+
+#### Example
+```js
+gibbon.define('app', [ Header ])
+gibbon.define('app.home', [ About ])
+``` 
+
+### gibbon.go(name)
+Instantiates a defined state.
+
+##### name `<String>`
+The `name` argument is used to define a state.
+
+## Component
+A component is a JavaScript [Class](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
+
+#### component.resolved `<Bool>`
+The `resolved` property is used to indicate a component is asynchronous. 
+
+The [State Lifecycle](https://github.com/gigablox/gibbon.js/edit/master/README.md#state-lifecycle) will wait to destroy components with a property `resolved` until it's set to `true`.
+
+#### component.destroy `<Function>`
+The `destroy` function is executed at the end of a [State Lifecycle](https://github.com/gigablox/gibbon.js/edit/master/README.md#state-lifecycle). 
+
+Useful for cleaning up things like event listeners and intervals.
+
+#### Example
+```js
+class Movies{
+  constructor(){
+    this.resolved = false
+    this.init()
+  }
+  
+  async init(){
+    await this.getMovies()
+    this.createHandle()
+    this.updateMovies()
+    this.createMoviesWorker()
+    this.resolved = true
+  }
+  
+  createHandle(){
+    this.handle = document.createElement('div')
+    this.handle.id = 'movies'
+    document.body.appendChild(this.handle)
+  }
+  
+  updateMovies(){
+    this.handle.innerHTML = `<pre>${JSON.stringify(this.movies)}</pre>`
+  }
+  
+  createMoviesWorker(){
+    this.moviesWorker = setInterval(async () => {
+      await this.getMovies()
+      this.updateMovies()
+    }, 10000)
+  }
+  
+  getMovies(){
+    this.movies = await fetch('http://example.com/movies.json')
+  }
+  
+  destroy(){
+    clearInterval(this.moviesWorker)
+  }
+}
+```
+
+## State Lifecycle
+When a state is instansiated is constructs each [Component](https://github.com/gigablox/gibbon.js/edit/master/README.md#component) from the [components array](https://github.com/gigablox/gibbon.js/edit/master/README.md#components-array).
+
+States and their components are automatically destroyed after each transition to the next state.
+
+#### Example
+```js
+gibbon.define('app', [ Header ])
+gibbon.define('app.home', [ About ])
+gibbon.define('app.contact', [ EmailForm ])
+
+gibbon.go('app.home')
+gibbon.go('app.contact') // 'app.home' is destroyed.
+```
+
+This includes top level state trees.
+
+#### Example
+```js
+gibbon.define('app1', [ Header1 ])
+gibbon.define('app1.home', [ About2 ])
+gibbon.define('app2', [ Header1 ])
+gibbon.define('app2.home', [ About2 ])
+
+gibbon.go('app1.home')
+gibbon.go('app2.home') // 'app1' and all its children are destroyed.
+```
+
+The same state can be instansiated multiple times in parallel. This is useful when one instance of a state is waiting to be destroyed while another is being created. For example, when a user toggles back and forth between the same pages that have asynchronous dependencies.
+
+#### Example
+```js
+gibbon.define('app', [ Header ])
+gibbon.define('app.home', [ About ])
+gibbon.define('app.movies', [ Movies ]) // Movies is an asynchronous component
+
+gibbon.go('app.home')
+gibbon.go('app.movies') // This 'app.movies' state has an instance ID of 'e465a2'
+gibbon.go('app.home')   // Instance 'e465a2' is still loading and has not yet been destroyed.
+gibbon.go('app.movies') // This 'app.movies' state has an instance ID of 'cb198a'. 
+
+// 100ms later
+// Instance 'e465a2' has finished loading and is destroyed.
+// Instance 'cb198a' has finished loading and is the active state.
 ```
 
 
 ## Events
 
-### `stateLoading`
-Emits the `<State>` object being resolved during transition.
-
-### `stateLoaded`
+### `stateChange`
 Emits the `<State>` object that has fully resolved.
-
-
-### `<State>` object
-  
-```
-{
-  name: <String>,
-  isChild: <Bool>,
-  base: <String>,
-  parent: <String>,
-  children: <Object>,
-  route: <String> || null,
-  resolves: <Array>,
-  components: <Array>,
-  template: <String> || null,
-  target: <String>,
-  constructed: <Object> 
-}
-```
-
-
-## Parallelism
-```
-$state.define('app1', {
-  target: 'body',
-  template: `<div id="app1"></div>`
-})
-
-$state.define('app2', {
-  target: 'body',
-  template: `<div id="app2"></div>`
-})
-```
-
-## Route Parameters
-```
-$state.define('app.product', {
-  target: 'body',
-  route: '/product/:id',
-  components: [ Product ]
-})
-```
 
 
 ## License

@@ -1,0 +1,16 @@
+{
+  "name": "gibbon",
+  "description": "Flexible JavaScript framework.",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gigablox/gibbon.js"
+  },
+  "keywords": [],
+  "author": "gigablox",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gigablox/gibbon.js/issues"
+  },
+  "homepage": "https://github.com/gigablox/gibbon.js"
+}

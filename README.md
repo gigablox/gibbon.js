@@ -3,9 +3,7 @@
 Flexible JavaScript framework.
 
 ## Introduction
-In application frameworks state management is used to instantiate and destroy a collection of components and services.
-
-Many frameworks go further than this to enforce patterns for how you manage data, write components, declare your routing etc.
+In application frameworks state management is used to instantiate and destroy a collection of components and services. Many frameworks go further than this to enforce patterns for how you manage data, write components, declare your routing etc.
 
 **Gibbon only provides a framework for state management.**
 

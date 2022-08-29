@@ -1,13 +1,13 @@
-
 # gibbon.js
+![GibbonJS](https://github.com/gigablox/gibbon.js/raw/master/gibbon.jpg)  
 Flexible JavaScript framework.
 
 ## Introduction
-State management is the only functionality shared by every application framework.
+In application frameworks state management is used to instantiate and destroy a collection of components and services.
 
-State management instantiates and destroys a collection of components. Nothing else. Many frameworks go further than this to enforce patterns for how you manage data, write components, declare your routing etc.
+Many frameworks go further than this to enforce patterns for how you manage data, write components, declare your routing etc.
 
-Gibbon only provides a framework for state management.
+**Gibbon only provides a framework for state management.**
 
 ## Quick Start
 ```js

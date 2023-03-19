@@ -1,0 +1,9 @@
+/dist
+/build
+*.log*
+.awcache
+yarn.lock
+.DS_STORE
+node_modules
+package-lock.json
+config.json
